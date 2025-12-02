@@ -1,0 +1,31 @@
+name: Vérifier l’origine des PR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bloquer si la PR vers main ne vient pas de 'dev' ou d'une branche *hotfix*
+        shell: bash
+        run: |
+          echo "Branche cible : ${{ github.base_ref }}"
+          echo "Branche source : ${{ github.head_ref }}"
+
+          if [ "${{ github.base_ref }}" != "main" ]; then
+            exit 0
+          fi
+
+          shopt -s nocasematch
+          SRC="${{ github.head_ref }}"
+
+          if [[ "$SRC" == "dev" || "$SRC" =~ hotfix ]]; then
+            exit 0
+          fi
+
+          echo "❌ Règle violée : cette PR vise 'main' mais sa branche source n'est ni 'dev' ni une branche contenant 'hotfix'."
+          echo "👉 Corrigez en ouvrant la PR depuis 'dev' OU renommez la branche pour inclure 'hotfix'."
+          exit 1
